@@ -1,9 +1,9 @@
 import csv
 import os
+import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from collections import Counter
-import numpy as np
 
 
 # класс для описания слова
@@ -40,6 +40,8 @@ class Graph:
         plt.show()
 
     def __bar_graph(self, x_axis: list, y_axis: list, path_save: str, aprox=False) -> plt.figure:
+        x_axis = x_axis[:50]
+        y_axis = y_axis[:50]
         x = np.arange(0, len(x_axis), 1)
         fig, ax = plt.subplots(figsize=(20, 12))
         ax.set_xticklabels(x_axis, rotation=90, fontsize=7)
@@ -49,7 +51,7 @@ class Graph:
             [a, b, c], res1 = curve_fit(lambda x, a, b, c: a * np.exp(-b * x) + c, x, y_axis)
             y1 = a * np.exp(-b * x) + c
             ax.plot(x, y1, 'r')
-            ax.text(120, 8, f"{round(a, 4)}*exp({round(b, 4)}*x) +{round(c, 4)}", color="red")
+            ax.text(40, 8, f"{round(a, 4)}*exp({round(b, 4)}*x) +{round(c, 4)}", color="red")
         ax.figure.savefig(path_save)
         return ax
 
@@ -132,19 +134,20 @@ def get_graph(path: str, words: Word, view_check=False) -> None:
         graphs.view_graph()
 
 
-def Frequency_Analysis(path_text: str, path_save_result: str) -> None:
+def frequency_analysis_text(path_text: str, path_save_result: str) -> None:
     """
-    Выполнение частотного анализа
-    :param path_text:
-    :param path_save_result:
-    :return:
+    Выполнение частотного анализа текста
     """
+    if not os.path.exists(path_save_result):
+        os.mkdir(path_save_result)
+
+    # Считываем текст из файла для анализа
     text = ""
     with open(path_text, encoding='utf-8', mode='r') as file:
         text = file.read()
 
-    # удалить все знаки
-    items_replace = "?!.,:;/'"
+    # Удаляем все знаки
+    items_replace = r"?!.,:;/')(0123456789“”"
     for item in items_replace:
         text = text.replace(item, '')
     text = text.replace('"', '')
@@ -154,6 +157,16 @@ def Frequency_Analysis(path_text: str, path_save_result: str) -> None:
     list_text = text.split()
     # удаление всех одиночных -
     list_text.remove('—')
+    new_list = []
+    for i, _word in enumerate(list_text):
+        items_replace = r"?!.,:;/')(0123456789“”"
+        for _char in items_replace:
+            _word = _word.replace(_char, '')
+            _word = _word.replace('"', '')
+            _word = _word.replace('—', '')
+        if _word is None or len(_word) <= 0: continue; 
+        new_list.append(_word)
+    list_text = new_list.copy()
     # Подсчет слов и выделение каждого слова
     dict_words = dict(Counter(list_text))
     # сортировка кол-во повторов слов
@@ -175,7 +188,8 @@ def Frequency_Analysis(path_text: str, path_save_result: str) -> None:
     """
 
 
-# запуск анализа
-path_save = "C:/Users/gongn/PycharmProjects/linguistics_LW_1/"
-path_text = "text.txt"
-Frequency_Analysis(path_text, path_save)
+# Точка входа в программу (Запуск анализа)
+if __name__ == "__main__":
+    path_save = "frequency_analysis_result/"
+    path_text = "text.txt"
+    frequency_analysis_text(path_text, path_save)
